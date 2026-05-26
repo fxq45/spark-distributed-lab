@@ -4,5 +4,5 @@
 
 echo "停止 Spark 集群..."
 cd "$(dirname "$0")/../docker"
-docker-compose down
+docker compose down
 echo "集群已停止。"

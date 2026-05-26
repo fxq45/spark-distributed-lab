@@ -33,8 +33,7 @@
 
 ## 环境要求
 
-- Docker >= 20.10
-- Docker Compose >= 2.0
+- Docker >= 20.10（内置 Compose 插件，无需单独安装 docker-compose）
 - 至少 4GB 可用内存
 
 ## 快速开始
