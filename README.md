@@ -35,6 +35,7 @@
 
 - Docker >= 20.10（内置 Compose 插件，无需单独安装 docker-compose）
 - 至少 4GB 可用内存
+- **无需访问 Docker Hub**：镜像从清华镜像站下载 Spark 本地构建，国内网络友好
 
 ## 快速开始
 
@@ -97,7 +98,7 @@ spark-distributed-lab/
 | Apache Spark | 3.5.1 | 分布式计算框架 |
 | PySpark | 3.5.1 | Python API |
 | Docker | 20.10+ | 容器化部署 |
-| Bitnami Spark Image | 3.5.1 | 预配置 Spark 镜像 |
+| Ubuntu 22.04 + OpenJDK 11 | - | 自构建 Spark 镜像基础 |
 
 ## 算法说明
 
