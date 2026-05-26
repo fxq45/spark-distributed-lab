@@ -9,7 +9,7 @@ echo "=========================================="
 cd "$(dirname "$0")/../docker"
 
 # 启动集群
-docker-compose up -d
+docker compose up -d
 
 echo ""
 echo "等待集群启动..."
@@ -18,7 +18,7 @@ sleep 10
 # 检查状态
 echo ""
 echo "集群状态:"
-docker-compose ps
+docker compose ps
 
 echo ""
 echo "=========================================="
