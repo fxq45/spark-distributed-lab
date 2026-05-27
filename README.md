@@ -95,10 +95,10 @@ spark-distributed-lab/
 
 | 组件 | 版本 | 用途 |
 |------|------|------|
-| Apache Spark | 3.5.1 | 分布式计算框架 |
-| PySpark | 3.5.1 | Python API |
+| Apache Spark | 3.5.8 | 分布式计算框架 |
+| PySpark | 3.5.8 | Python API |
 | Docker | 20.10+ | 容器化部署 |
-| Ubuntu 22.04 + OpenJDK 11 | - | 自构建 Spark 镜像基础 |
+| Ubuntu 22.04 + OpenJDK 17 | - | 自构建 Spark 镜像基础 |
 
 ## 算法说明
 
