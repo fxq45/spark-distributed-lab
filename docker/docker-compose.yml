@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: spark-local:3.5.1
+    image: spark-local:3.5.8
     container_name: spark-master
     hostname: spark-master
     command: >
@@ -22,7 +22,7 @@ services:
       - spark-network
 
   spark-worker-1:
-    image: spark-local:3.5.1
+    image: spark-local:3.5.8
     container_name: spark-worker-1
     hostname: spark-worker-1
     command: >
@@ -41,7 +41,7 @@ services:
       - spark-network
 
   spark-worker-2:
-    image: spark-local:3.5.1
+    image: spark-local:3.5.8
     container_name: spark-worker-2
     hostname: spark-worker-2
     command: >
