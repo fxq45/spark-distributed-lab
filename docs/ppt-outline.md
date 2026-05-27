@@ -13,6 +13,18 @@
 5. **字体**：标题用粗体 28-32pt，正文 18-20pt，代码用等宽字体 16pt
 6. **动画**：不要花哨动画，简单的逐条出现即可
 7. **演讲时间**：控制在 10 分钟内（每页约 30-40 秒）
+8. **截图占位**：凡是标注 `【插入截图 X】` 的地方，请生成空白占位框（带虚线边框 + 文字提示），我会后续手动替换为真实截图
+
+---
+
+## 需要插入的截图清单（共 4 张）
+
+| 编号 | 截图内容 | 插入位置 | 占页面比例 |
+|------|----------|----------|-----------|
+| 截图 1 | Spark 集群空闲状态 Web UI（2 Workers ALIVE、4 Cores） | 第 8 页 | 60% |
+| 截图 2 | PageRank 终端运行结果（Top 20 排名表格） | 第 11 页 | 50% |
+| 截图 3 | TF-IDF 终端运行结果（相似文档对 + 关键词） | 第 14 页 | 50% |
+| 截图 4 | 任务运行中的 Spark Web UI（Running Applications 有记录） | 第 15 页 | 60% |
 
 ---
 
@@ -140,7 +152,10 @@ services:
 - 2 个 Worker 注册成功，状态 ALIVE
 - 集群资源：4 Cores / 2 GB Memory
 
-**配图**：放你截的第一张空闲状态的 Spark Web UI 截图
+**【插入截图 1：Spark 集群空闲状态 Web UI】**
+> 截图内容：Spark Master 页面，显示 2 Workers ALIVE、4 Cores、2GB Memory、Running Applications = 0
+> 用途：证明集群部署成功
+> 建议占据页面 60% 面积，居中放置
 
 ---
 
@@ -203,7 +218,10 @@ services:
 | 5 | R | 0.05642 |
 | ... | ... | ... |
 
-**配图**：放 PageRank 终端输出截图
+**【插入截图 2：PageRank 终端运行结果】**
+> 截图内容：终端输出 Top 20 排名表格，显示节点 G 排名第一(0.06781)，总和=1.000000，耗时 8.95 秒
+> 用途：展示算法运行结果
+> 建议占据页面 50% 面积，右侧放置
 
 ---
 
@@ -265,7 +283,10 @@ TF-IDF 计算（Spark MLlib Pipeline）
 
 **分析**：主题相近的文档相似度更高，TF-IDF 有效提取了文档主题特征
 
-**配图**：放 TF-IDF 终端输出截图
+**【插入截图 3：TF-IDF 终端运行结果】**
+> 截图内容：终端输出相似文档对排名 + 每文档关键词，显示 machine_learning 与 neural_networks 最相似(0.185)
+> 用途：展示算法运行结果
+> 建议占据页面 50% 面积，右侧放置
 
 ---
 
@@ -276,10 +297,14 @@ TF-IDF 计算（Spark MLlib Pipeline）
 - 可查看：集群状态、任务进度、资源使用
 - 任务分发到 2 个 Worker 并行执行
 
-**配图**：放你截的第二张截图（Running Applications 有记录的那张），标注以下信息：
-- 指出 "Running Applications (1)" → 正在运行的任务
-- 指出 "Completed Applications (2)" → 已完成的任务
-- 指出两个 Worker 的 Cores 和 Memory 全部被占满
+**【插入截图 4：任务运行中的 Spark Web UI】**
+> 截图内容：Spark Master 页面，显示 Running Applications(1) = PageRank-Distributed 正在运行，Completed Applications(2)，Workers 的 Cores/Memory 全部被占满
+> 用途：证明任务确实分布到了 2 个 Worker 上并行执行
+> 建议占据页面 60% 面积，居中放置
+> 标注要求：用红色箭头/圈标注以下 3 处：
+>   1. "Running Applications (1)" → 正在运行的任务
+>   2. "Completed Applications (2)" → 已完成的任务
+>   3. Workers 表格中 Cores Used 和 Memory Used → 资源被占满
 
 ---
 
