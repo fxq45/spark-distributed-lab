@@ -155,11 +155,11 @@ Top 5 相似文档对：
 
 | 排名 | 文档 A | 文档 B | 余弦相似度 |
 |------|--------|--------|-----------|
-| 1 | machine_learning | neural_networks | 0.72 |
-| 2 | distributed_systems | cloud_computing | 0.65 |
-| 3 | big_data | spark_framework | 0.61 |
-| 4 | cloud_computing | big_data | 0.58 |
-| 5 | distributed_systems | spark_framework | 0.55 |
+| 1 | machine_learning | neural_networks | 0.1854 |
+| 2 | big_data | spark_framework | 0.1665 |
+| 3 | cloud_computing | big_data | 0.0892 |
+| 4 | neural_networks | spark_framework | 0.0802 |
+| 5 | machine_learning | big_data | 0.0787 |
 
 **分析：** 主题相关的文档相似度更高，说明 TF-IDF 能有效提取文档主题特征。
 
