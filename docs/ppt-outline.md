@@ -8,7 +8,7 @@
 
 1. **总页数**：15-18 页（不含封面和结束页）
 2. **每页文字**：标题 + 不超过 5 个要点，每个要点不超过 20 字
-3. **必须包含的图**：系统架构图（Master-Worker）、PageRank 算法流程图、TF-IDF 计算流程图、实验结果表格
+3. **必须包含的图**：系统架构图（Master-Worker）、Spark 运行架构图（Driver-Executor）、Job/Stage/Task 调度图、PageRank 算法流程图、TF-IDF 计算流程图、实验结果表格
 4. **配色**：科技蓝（#1E3A5F）+ 白色背景，图表用蓝橙对比色
 5. **字体**：标题用粗体 28-32pt，正文 18-20pt，代码用等宽字体 16pt
 6. **动画**：不要花哨动画，简单的逐条出现即可
@@ -17,14 +17,13 @@
 
 ---
 
-## 需要插入的截图清单（共 4 张）
+## 需要插入的截图清单（共 1 张）
 
 | 编号 | 截图内容 | 插入位置 | 占页面比例 |
 |------|----------|----------|-----------|
-| 截图 1 | Spark 集群空闲状态 Web UI（2 Workers ALIVE、4 Cores） | 第 8 页 | 60% |
-| 截图 2 | PageRank 终端运行结果（Top 20 排名表格） | 第 11 页 | 50% |
-| 截图 3 | TF-IDF 终端运行结果（相似文档对 + 关键词） | 第 14 页 | 50% |
-| 截图 4 | 任务运行中的 Spark Web UI（Running Applications 有记录） | 第 15 页 | 60% |
+| 截图 1 | Spark 集群空闲状态 Web UI（2 Workers ALIVE、4 Cores） | 第 10 页 | 60% |
+
+> 注：算法运行结果截图（终端输出、任务运行中的 Web UI 等）留给视频演示环节，PPT 中用表格/文字呈现关键数据即可。
 
 ---
 
@@ -40,12 +39,12 @@
 ## 第 2 页：目录
 
 - 一、选题背景与目标
-- 二、Apache Spark 简介
-- 三、系统架构设计
-- 四、环境部署
-- 五、算法一：PageRank 分布式计算
-- 六、算法二：TF-IDF 文本相似度分析
-- 七、实验结果与分析
+- 二、Apache Spark 简介与核心概念
+- 三、Spark 运行架构与调度机制
+- 四、容错机制与 Hadoop 对比
+- 五、实验集群设计与部署
+- 六、分布式算法实现（PageRank + TF-IDF）
+- 七、实验结果与分布式特性分析
 - 八、总结与展望
 
 ---
@@ -90,10 +89,97 @@
 
 ---
 
-## 第 6 页：系统架构设计
+## 第 6 页：Spark 运行架构（重点页）
 
 **要点：**
-- Master-Worker 架构
+- **Driver**：运行用户主程序，创建 SparkContext，负责任务拆分与调度
+- **Cluster Manager**：集群资源管理器（Standalone / YARN / Mesos / K8s）
+- **Executor**：运行在 Worker 节点上的进程，执行具体 Task，管理本地缓存
+- 数据流：Driver → Cluster Manager（申请资源）→ Executor（执行任务）→ Driver（返回结果）
+
+**配图（核心页，重点画好）：**
+```
+┌─────────────────────────────────────────────┐
+│               Spark Application             │
+│                                             │
+│  ┌───────────────────┐                      │
+│  │     Driver         │                      │
+│  │  SparkContext      │                      │
+│  │  DAGScheduler      │                      │
+│  │  TaskScheduler     │                      │
+│  └────────┬──────────┘                      │
+│           │  申请资源                        │
+│  ┌────────▼──────────┐                      │
+│  │  Cluster Manager   │                      │
+│  │ (Standalone Master)│                      │
+│  └────┬──────────┬───┘                      │
+│       │          │  分配 Executor            │
+│  ┌────▼───┐ ┌───▼────┐                     │
+│  │Executor│ │Executor│                      │
+│  │(Worker1)│ │(Worker2)│                     │
+│  │Task|Task│ │Task|Task│                     │
+│  │ Cache   │ │ Cache   │                     │
+│  └────────┘ └────────┘                      │
+└─────────────────────────────────────────────┘
+```
+
+**讲解重点**：区分 Driver / Cluster Manager / Executor 三层角色
+
+---
+
+## 第 7 页：任务调度机制 — Job / Stage / Task
+
+**要点：**
+- **Application**：一个 SparkContext 对应一个 Application
+- **Job**：每次 Action 触发一个 Job
+- **Stage**：以 Shuffle 为边界，将 Job 切分为多个 Stage（宽依赖 vs 窄依赖）
+- **Task**：每个 Stage 中每个 Partition 对应一个 Task，分发到 Executor 并行执行
+
+**配图（调度拆分示意图）：**
+```
+Action (collect)
+   │
+   ▼
+ Job 0
+   │
+   ├── Stage 0 (窄依赖: textFile → map → filter)
+   │      ├── Task 0.0 (Partition 0)  → Executor 1
+   │      └── Task 0.1 (Partition 1)  → Executor 2
+   │                ↓ Shuffle
+   └── Stage 1 (reduceByKey → collect)
+          ├── Task 1.0 (Partition 0)  → Executor 1
+          └── Task 1.1 (Partition 1)  → Executor 2
+```
+
+**讲解重点**：Shuffle 是 Stage 切分的依据，也是性能瓶颈所在
+
+---
+
+## 第 8 页：容错机制 — RDD Lineage 与 Hadoop 对比
+
+**要点：**
+- **RDD Lineage（血统）**：每个 RDD 记录其由哪些父 RDD 经过何种 Transformation 得到
+- 数据丢失时，根据 Lineage 从上游重新计算，无需写多副本
+- **checkpoint**：对于 Lineage 链过长的场景，手动持久化到 HDFS 截断链路
+
+**与 Hadoop MapReduce 对比表格：**
+
+| 特性 | Hadoop MapReduce | Spark |
+|------|------------------|-------|
+| 计算模型 | 两阶段（Map → Reduce） | DAG（多阶段流水线） |
+| 中间结果 | 写磁盘（HDFS） | 内存缓存（RDD cache） |
+| 迭代效率 | 每轮读写磁盘，慢 | 内存复用，快 10-100× |
+| 容错 | HDFS 3 副本冗余 | RDD Lineage 重算 |
+| 适用场景 | 单次批处理 | 迭代计算 / 交互查询 |
+
+**讲解重点**：Spark 的 Lineage 容错 = 用计算换存储，适合迭代场景
+
+---
+
+## 第 9 页：实验集群架构设计
+
+**要点：**
+- Master-Worker 架构（Standalone 模式）
 - 1 个 Master 节点：任务调度 + 资源管理
 - 2 个 Worker 节点：任务执行 + 数据处理
 - Docker 容器化部署，各节点独立 IP，通过虚拟网络通信
@@ -121,13 +207,14 @@
 
 ---
 
-## 第 7 页：环境部署方案
+## 第 10 页：环境部署与验证
 
 **要点：**
 - 使用 Docker + Docker Compose 一键部署
 - 基础镜像：Ubuntu 22.04 + OpenJDK 17 + Spark 3.5.8
 - 自构建镜像，不依赖外部仓库
 - 一条命令启动集群：`./scripts/start-cluster.sh`
+- 部署验证：Spark Master Web UI 显示 2 Workers ALIVE、4 Cores、2 GB Memory
 
 **代码片段（小字展示 docker-compose.yml 核心部分）：**
 ```yaml
@@ -143,63 +230,38 @@ services:
     command: start-worker.sh spark://spark-master:7077
 ```
 
----
-
-## 第 8 页：部署验证（放截图）
-
-**要点：**
-- Spark Master Web UI (localhost:8080)
-- 2 个 Worker 注册成功，状态 ALIVE
-- 集群资源：4 Cores / 2 GB Memory
-
 **【插入截图 1：Spark 集群空闲状态 Web UI】**
 > 截图内容：Spark Master 页面，显示 2 Workers ALIVE、4 Cores、2GB Memory、Running Applications = 0
 > 用途：证明集群部署成功
-> 建议占据页面 60% 面积，居中放置
+> 建议占据页面 40% 面积，底部放置
 
 ---
 
-## 第 9 页：算法一 — PageRank 原理
+## 第 11 页：算法一 — PageRank 原理与分布式实现
 
-**要点：**
+**原理要点：**
 - Google 1998 年提出的网页排名算法
 - 核心思想：被更多重要页面链接的页面更重要
 - 迭代公式：PR(A) = (1-d)/N + d × Σ(PR(Ti)/C(Ti))
-  - d = 0.85（阻尼系数，用户继续点击链接的概率）
-  - N = 节点总数
-  - Ti = 指向 A 的页面
-  - C(Ti) = Ti 的出链数
+  - d = 0.85（阻尼系数）、N = 节点总数
 
-**配图**：一个 4-5 个节点的小图，标注箭头方向和 PR 值，直观展示"重要的节点指向你，你就更重要"
-
----
-
-## 第 10 页：PageRank 分布式实现
-
-**要点（流程图）：**
+**分布式实现（用精简流程图）：**
 ```
-输入边列表 → textFile (分布式读取)
-     ↓
-构建邻接表 → groupByKey (按节点分组)
-     ↓
-初始化 PR 值 → 每个节点 1/N
-     ↓
-迭代 10 次：
-  ├── join: 连接链接信息与 PR 值
-  ├── flatMap: 计算每个节点的贡献值（并行）
-  ├── reduceByKey: 汇总贡献值（Shuffle）
-  └── mapValues: 应用阻尼系数更新 PR
-     ↓
-输出 Top-K 排名
+textFile → groupByKey (邻接表)
+  → 迭代 10 次:  join → flatMap (贡献值) → reduceByKey (Shuffle 汇总) → mapValues (阻尼更新)
+  → 输出 Top-K
 ```
 
 **关键点强调：**
-- `flatMap` + `reduceByKey` = 经典的 MapReduce 模式
+- `flatMap` + `reduceByKey` = 经典 MapReduce 模式
 - `cache()` 缓存静态链接数据，避免重复读取
+- 每轮迭代触发 1 次 Shuffle，是性能瓶颈
+
+**配图**：一个 4-5 个节点的小图，标注箭头方向和 PR 值
 
 ---
 
-## 第 11 页：PageRank 实验结果
+## 第 12 页：PageRank 实验结果
 
 **要点：**
 - 测试数据：20 个节点，84 条边
@@ -207,7 +269,7 @@ services:
 - 耗时：8.95 秒
 - PR 总和 = 1.000000（验证正确性）
 
-**表格（Top 10）：**
+**表格（Top 5）：**
 
 | 排名 | 节点 | PageRank |
 |------|------|----------|
@@ -216,50 +278,28 @@ services:
 | 3 | D | 0.06157 |
 | 4 | E | 0.05980 |
 | 5 | R | 0.05642 |
-| ... | ... | ... |
 
-**【插入截图 2：PageRank 终端运行结果】**
-> 截图内容：终端输出 Top 20 排名表格，显示节点 G 排名第一(0.06781)，总和=1.000000，耗时 8.95 秒
-> 用途：展示算法运行结果
-> 建议占据页面 50% 面积，右侧放置
+> 完整 Top 20 排名及终端运行截图将在视频演示环节展示。
 
 ---
 
-## 第 12 页：算法二 — TF-IDF 原理
+## 第 13 页：算法二 — TF-IDF 原理与分布式实现
 
-**要点：**
+**原理要点：**
 - TF-IDF = 词频 × 逆文档频率（信息检索经典算法）
 - TF(t,d) = 词 t 在文档 d 中的出现次数 / 文档 d 总词数
 - IDF(t) = log(文档总数 / 包含词 t 的文档数)
-- 一个词在某文档中出现频率高 + 在其他文档中很少出现 → TF-IDF 值高 → 这是该文档的关键词
 - 余弦相似度：通过 TF-IDF 向量计算文档间的相似程度
 
-**配图**：一个简单的例子，比如"Spark"这个词在不同文档中的 TF-IDF 值
-
----
-
-## 第 13 页：TF-IDF 分布式实现
-
-**要点（流程图）：**
+**分布式实现（用精简流程图）：**
 ```
-文档目录 → wholeTextFiles (分布式读取)
-     ↓
-文本预处理（分布式）
-  ├── 转小写 + 去标点
-  ├── Tokenizer 分词
-  └── StopWordsRemover 去停用词
-     ↓
-TF-IDF 计算（Spark MLlib Pipeline）
-  ├── HashingTF: 分布式词频统计
-  └── IDF: 分布式逆文档频率
-     ↓
-余弦相似度计算
-     ↓
-输出 Top-K 相似文档对 + 关键词
+wholeTextFiles → 预处理 (分词/去停用词)
+  → HashingTF (分布式词频) → IDF (分布式逆文档频率)
+  → 余弦相似度 → 输出 Top-K 相似文档对
 ```
 
 **关键点强调：**
-- 使用 Spark MLlib 内置组件，工业级实现
+- 使用 Spark MLlib 内置 Pipeline，工业级实现
 - HashingTF 用哈希避免全局词典，适合大规模数据
 
 ---
@@ -283,61 +323,43 @@ TF-IDF 计算（Spark MLlib Pipeline）
 
 **分析**：主题相近的文档相似度更高，TF-IDF 有效提取了文档主题特征
 
-**【插入截图 3：TF-IDF 终端运行结果】**
-> 截图内容：终端输出相似文档对排名 + 每文档关键词，显示 machine_learning 与 neural_networks 最相似(0.185)
-> 用途：展示算法运行结果
-> 建议占据页面 50% 面积，右侧放置
+> 完整关键词列表及终端运行截图将在视频演示环节展示。
 
 ---
 
-## 第 15 页：任务运行监控
+## 第 15 页：分布式特性分析（结合实验数据）
+
+**要点（对比表格，结合本实验的实际数据）：**
+
+| 特性 | 本实验中的体现 |
+|------|----------------|
+| 数据并行 | PageRank 20 节点的边数据自动拆分到 2 个 Worker 并行处理 |
+| 任务调度 | 每轮 PageRank 迭代生成 1 个 Stage，Master 分配 Task 到各 Executor |
+| Shuffle 开销 | PageRank `reduceByKey` 每轮触发跨节点数据交换；10 轮迭代 = 10 次 Shuffle |
+| 内存缓存 | `cache()` 将静态邻接表常驻内存，避免 10 轮重复读取（对比 Hadoop 每轮都要读写 HDFS） |
+| MLlib Pipeline | TF-IDF 使用 HashingTF + IDF 组合，自动分发到各 Worker 并行计算特征向量 |
+
+**讲解重点**：不是泛泛地讲分布式特性，而是指出"我们的实验中哪里体现了这些特性"
+
+---
+
+## 第 16 页：总结
 
 **要点：**
-- Spark 提供 Web UI 实时监控
-- 可查看：集群状态、任务进度、资源使用
-- 任务分发到 2 个 Worker 并行执行
-
-**【插入截图 4：任务运行中的 Spark Web UI】**
-> 截图内容：Spark Master 页面，显示 Running Applications(1) = PageRank-Distributed 正在运行，Completed Applications(2)，Workers 的 Cores/Memory 全部被占满
-> 用途：证明任务确实分布到了 2 个 Worker 上并行执行
-> 建议占据页面 60% 面积，居中放置
-> 标注要求：用红色箭头/圈标注以下 3 处：
->   1. "Running Applications (1)" → 正在运行的任务
->   2. "Completed Applications (2)" → 已完成的任务
->   3. Workers 表格中 Cores Used 和 Memory Used → 资源被占满
-
----
-
-## 第 16 页：分布式特性分析
-
-**要点（对比表格）：**
-
-| 特性 | 说明 |
-|------|------|
-| 数据并行 | 数据自动拆分到多个 Worker 并行处理 |
-| 任务调度 | Master 自动分配任务，Worker 动态领取 |
-| 容错机制 | RDD Lineage：数据丢失可通过血统信息重新计算 |
-| 可扩展性 | 增加 Worker 节点即可线性扩展算力 |
-| Shuffle | 跨节点数据交换，迭代算法的性能瓶颈 |
-
----
-
-## 第 17 页：总结
-
-**要点：**
-1. 成功部署了 Spark 分布式集群（1 Master + 2 Workers）
+1. 成功部署了 Spark 分布式集群（1 Master + 2 Workers，Standalone 模式）
 2. 实现了两个经典分布式算法：PageRank（图迭代计算） + TF-IDF（文本分析）
 3. 通过 Web UI 验证了任务确实分布到多节点并行执行
 4. Docker 容器化方案与真实集群架构一致，便于快速复现
 
 **收获：**
-- 理解了 Master-Worker 架构的调度机制
+- 理解了 Driver / Executor / Cluster Manager 三层运行架构
+- 掌握了 Job → Stage → Task 的调度拆分过程
+- 体会了 RDD Lineage 容错与 Hadoop 副本容错的设计差异
 - 掌握了 RDD 编程模型和 MLlib 机器学习组件
-- 体会了分布式计算中 Shuffle 的开销和优化策略
 
 ---
 
-## 第 18 页：展望（可选）
+## 第 17 页：展望（可选）
 
 **要点：**
 - 可扩展到更多 Worker 节点测试加速比
@@ -347,7 +369,7 @@ TF-IDF 计算（Spark MLlib Pipeline）
 
 ---
 
-## 第 19 页：致谢 / Q&A
+## 第 18 页：致谢 / Q&A
 
 - 感谢老师指导
 - 参考文献（列 3-4 篇）：
