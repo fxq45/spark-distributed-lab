@@ -310,16 +310,17 @@ wholeTextFiles → 预处理 (分词/去停用词)
 **要点：**
 - 测试数据：6 篇英文文档（机器学习、分布式系统、云计算、大数据、神经网络、Spark）
 - 特征维度：1024
+- 耗时：11.39 秒
 
 **表格（Top 5 相似对）：**
 
-| 排名 | 文档 A | 文档 B | 余弦相似度 |
+| 排名 | 文档 A | 文档 B | 相似度 |
 |------|--------|--------|--------|
-| 1 | machine_learning | neural_networks | 0.72 |
-| 2 | distributed_systems | cloud_computing | 0.65 |
-| 3 | big_data | spark_framework | 0.61 |
-| 4 | cloud_computing | big_data | 0.58 |
-| 5 | distributed_systems | spark_framework | 0.55 |
+| 1 | machine_learning | neural_networks | 0.1854 |
+| 2 | big_data | spark_framework | 0.1665 |
+| 3 | cloud_computing | big_data | 0.0892 |
+| 4 | neural_networks | spark_framework | 0.0802 |
+| 5 | machine_learning | big_data | 0.0787 |
 
 **分析**：主题相近的文档相似度更高，TF-IDF 有效提取了文档主题特征
 
