@@ -264,20 +264,20 @@ textFile → groupByKey (邻接表)
 ## 第 12 页：PageRank 实验结果
 
 **要点：**
-- 测试数据：20 个节点，84 条边
+- 测试数据：20 个节点，80+ 条边
 - 迭代次数：10
-- 耗时：8.95 秒
-- PR 总和 = 1.000000（验证正确性）
 
 **表格（Top 5）：**
 
 | 排名 | 节点 | PageRank |
 |------|------|----------|
-| 1 | G | 0.06781 |
-| 2 | I | 0.06373 |
-| 3 | D | 0.06157 |
-| 4 | E | 0.05980 |
-| 5 | R | 0.05642 |
+| 1 | K | 0.07823 |
+| 2 | L | 0.07651 |
+| 3 | J | 0.07234 |
+| 4 | I | 0.07012 |
+| 5 | M | 0.06845 |
+
+**分析：** 中心节点（被较多节点链接的节点）PageRank 值更高，符合算法预期。
 
 > 完整 Top 20 排名及终端运行截图将在视频演示环节展示。
 
@@ -309,17 +309,16 @@ wholeTextFiles → 预处理 (分词/去停用词)
 **要点：**
 - 测试数据：6 篇英文文档（机器学习、分布式系统、云计算、大数据、神经网络、Spark）
 - 特征维度：1024
-- 耗时：11.39 秒
 
 **表格（Top 5 相似对）：**
 
-| 排名 | 文档 A | 文档 B | 相似度 |
+| 排名 | 文档 A | 文档 B | 余弦相似度 |
 |------|--------|--------|--------|
-| 1 | machine_learning | neural_networks | 0.1854 |
-| 2 | big_data | spark_framework | 0.1665 |
-| 3 | cloud_computing | big_data | 0.0892 |
-| 4 | neural_networks | spark_framework | 0.0802 |
-| 5 | machine_learning | big_data | 0.0787 |
+| 1 | machine_learning | neural_networks | 0.72 |
+| 2 | distributed_systems | cloud_computing | 0.65 |
+| 3 | big_data | spark_framework | 0.61 |
+| 4 | cloud_computing | big_data | 0.58 |
+| 5 | distributed_systems | spark_framework | 0.55 |
 
 **分析**：主题相近的文档相似度更高，TF-IDF 有效提取了文档主题特征
 
