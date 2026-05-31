@@ -1,0 +1,227 @@
+zoe@ERAZER:/mnt/c/Users/fxkj/spark-distributed-lab$ docker compose -f docker/docker-compose.yml build \
+build-ar>   --build-arg HTTP_PROXY=http://172.31.16.1:7897 \
+>   --build-arg HTTPS_PROXY=http://172.31.16.1:7897
+[+] Building 139.2s (12/12) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 687B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 1.41kB                                                                             0.0s
+ => [internal] load metadata for docker.io/library/ubuntu:22.04                                                    9.5s
+ => [internal] load .dockerignore                                                                                  0.0s
+ => => transferring context: 2B                                                                                    0.0s
+ => CACHED [1/6] FROM docker.io/library/ubuntu:22.04@sha256:4f838adc7181d9039ac795a7d0aba05a9bd9ecd480d294483169c  0.1s
+ => => resolve docker.io/library/ubuntu:22.04@sha256:4f838adc7181d9039ac795a7d0aba05a9bd9ecd480d294483169c5def983  0.0s
+ => [2/6] RUN apt-get update && apt-get install -y --no-install-recommends     openjdk-17-jre-headless     pytho  72.6s
+ => [3/6] RUN ( curl -fSL "https://mirrors.tuna.tsinghua.edu.cn/apache/spark/spark-3.5.8/spark-3.5.8-bin-hadoop3  38.9s
+ => [4/6] RUN mkdir -p /opt/spark-apps /opt/spark-data                                                             0.3s
+ => [5/6] RUN cp /opt/spark/conf/log4j2.properties.template /opt/spark/conf/log4j2.properties     && sed -i 's/ro  0.4s
+ => [6/6] WORKDIR /opt/spark                                                                                       0.1s
+ => exporting to image                                                                                            16.3s
+ => => exporting layers                                                                                           12.2s
+ => => exporting manifest sha256:36b239ce5b9d19a2ff9000612b02e86914abcf67fe92720ce4a8afc094cdc4a9                  0.0s
+ => => exporting config sha256:039d434fdad2e46ac9062155162c21b7c65aec0051e92927c14873922f639d3a                    0.0s
+ => => exporting attestation manifest sha256:cb4efed46bcf46a15bad8fb8293de5d30c9045c8fecfe6754c3900210fe8f1aa      0.1s
+ => => exporting manifest list sha256:1ee36e2014585cf157b4dbd97a9e6fde2fc6688617759ec0cb81252e43330b79             0.0s
+ => => naming to docker.io/library/spark-local:3.5.8                                                               0.0s
+ => => unpacking to docker.io/library/spark-local:3.5.8                                                            3.9s
+ => resolving provenance for metadata file                                                                         0.0s
+[+] build 1/1
+ ✔ Image spark-local:3.5.8 Built                                                                                  139.4s
+zoe@ERAZER:/mnt/c/Users/fxkj/spark-distributed-lab$ ./scripts/start-cluster.sh
+==========================================
+  启动 Spark 分布式集群
+==========================================
+
+检查/构建 Spark 镜像（首次约需 3-5 分钟）...
+[+] Building 7.7s (3/3) FINISHED
+ => [internal] load local bake definitions                                                                         0.0s
+ => => reading from stdin 564B                                                                                     0.0s
+ => [internal] load build definition from Dockerfile                                                               0.0s
+ => => transferring dockerfile: 1.41kB                                                                             0.0s
+ => ERROR [internal] load metadata for docker.io/library/ubuntu:22.04                                              6.8s
+------
+ > [internal] load metadata for docker.io/library/ubuntu:22.04:
+------
+[+] build 0/1
+ ⠙ Image spark-local:3.5.8 Building                                                                                 7.9s
+Dockerfile:1
+
+--------------------
+
+   1 | >>> FROM ubuntu:22.04
+
+   2 |
+
+   3 |     ENV DEBIAN_FRONTEND=noninteractive
+
+--------------------
+
+启动集群容器...
+[+] up 4/4
+ ✔ Network docker_spark-network Created                                                                             0.0s
+ ✔ Container spark-master       Started                                                                             0.7s
+ ✔ Container spark-worker-2     Started                                                                             0.8s
+ ✔ Container spark-worker-1     Started                                                                             0.9s
+
+等待集群启动...
+
+集群状态:
+NAME             IMAGE               COMMAND                   SERVICE          CREATED          STATUS          PORTS
+spark-master     spark-local:3.5.8   "tini -- bash -c '\n …"   spark-master     16 seconds ago   Up 15 seconds   0.0.0.0:4040->4040/tcp, [::]:4040->4040/tcp, 0.0.0.0:7077->7077/tcp, [::]:7077->7077/tcp, 0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+spark-worker-1   spark-local:3.5.8   "tini -- bash -c '\n …"   spark-worker-1   16 seconds ago   Up 15 seconds   0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp
+spark-worker-2   spark-local:3.5.8   "tini -- bash -c '\n …"   spark-worker-2   16 seconds ago   Up 15 seconds   0.0.0.0:8082->8081/tcp, [::]:8082->8081/tcp
+
+==========================================
+  集群已启动!
+  Spark Master Web UI: http://localhost:8080
+  Spark Worker 1 UI:   http://localhost:8081
+  Spark Worker 2 UI:   http://localhost:8082
+==========================================
+zoe@ERAZER:/mnt/c/Users/fxkj/spark-distributed-lab$ ./scripts/run-pagerank.sh
+==========================================
+  提交 PageRank 任务到 Spark 集群
+==========================================
+26/05/27 01:54:59 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+============================================================
+  PageRank 分布式计算
+============================================================
+  输入文件: /opt/spark-data/web_graph.txt
+  迭代次数: 10
+  Spark Master: spark://spark-master:7077
+============================================================
+
+  图信息: 20 个节点
+  总边数: 84
+
+  阻尼系数: 0.85
+
+  开始迭代计算...
+    第 1/10 次迭代完成
+    第 5/10 次迭代完成
+    第 10/10 次迭代完成
+
+  计算完成! 耗时: 8.95 秒
+
+  ==================================================
+  Top 20 PageRank 结果:
+  ==================================================
+  排名    节点             PageRank
+  --------------------------------------------------
+  1     G              0.06780525
+  2     I              0.06372509
+  3     D              0.06156694
+  4     E              0.05979720
+  5     R              0.05641733
+  6     F              0.05624541
+  7     L              0.05523958
+  8     H              0.05468543
+  9     K              0.05435035
+  10    J              0.05400849
+  11    Q              0.05395400
+  12    P              0.05201439
+  13    O              0.05036277
+  14    N              0.04863869
+  15    M              0.04713104
+  16    S              0.04468377
+  17    B              0.03788987
+  18    T              0.03219269
+  19    A              0.02510339
+  20    C              0.02418830
+  ==================================================
+  总节点数: 20
+  PageRank 总和: 1.000000
+
+  程序结束。
+
+PageRank 任务完成!
+zoe@ERAZER:/mnt/c/Users/fxkj/spark-distributed-lab$ ./scripts/run-tfidf.sh
+==========================================
+  提交 TF-IDF 相似度分析任务到 Spark 集群
+==========================================
+26/05/27 01:57:04 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+============================================================
+  TF-IDF 文本相似度分析系统
+============================================================
+  输入目录: /opt/spark-data/documents
+  特征维度: 1024
+  输出 Top-K: 10
+  Spark Master: spark://spark-master:7077
+============================================================
+
+  读取到 6 个文档
+  正在进行文本预处理...
+  正在计算 TF-IDF 权重...
+  正在计算文档相似度矩阵...
+
+  计算完成! 耗时: 12.21 秒
+
+  ============================================================
+  Top 10 最相似文档对:
+  ============================================================
+  排名   文档A                 文档B                 相似度
+  ------------------------------------------------------------
+  1    doc1_machine_learning.txtdoc5_neural_networks.txt0.185387
+  2    doc4_big_data.txt   doc6_spark_framework.txt0.166472
+  3    doc3_cloud_computing.txtdoc4_big_data.txt   0.089212
+  4    doc5_neural_networks.txtdoc6_spark_framework.txt0.080211
+  5    doc1_machine_learning.txtdoc4_big_data.txt   0.078675
+  6    doc1_machine_learning.txtdoc2_distributed_systems.txt0.076666
+  7    doc2_distributed_systems.txtdoc3_cloud_computing.txt0.069100
+  8    doc1_machine_learning.txtdoc6_spark_framework.txt0.059371
+  9    doc1_machine_learning.txtdoc3_cloud_computing.txt0.057150
+  10   doc2_distributed_systems.txtdoc4_big_data.txt   0.044481
+  ============================================================
+
+  统计信息:
+    文档总数: 6
+    文档对总数: 15
+    平均相似度: 0.069568
+    最高相似度: 0.185387
+    最低相似度: 0.005500
+
+  ============================================================
+  各文档 Top 5 关键词 (按 TF-IDF 权重):
+  ============================================================
+
+  doc1_machine_learning.txt:
+    - instruction: 1.6946
+    - programs: 0.8473
+    - model: 0.8473
+    - accordingly: 0.5596
+
+  doc2_distributed_systems.txt:
+    - rpc: 1.2528
+    - computer: 1.2528
+    - actions: 1.2528
+    - programs: 0.8473
+
+  doc3_cloud_computing.txt:
+    - uses: 1.2528
+    - direct: 1.2528
+    - model: 0.8473
+
+  doc4_big_data.txt:
+    - parallelism: 2.5055
+    - sets: 0.8473
+    - processing: 0.8473
+
+  doc5_neural_networks.txt:
+    - systems: 1.2528
+
+  doc6_spark_framework.txt:
+    - structured: 1.2528
+    - set: 1.2528
+    - high: 1.2528
+    - analysis: 0.8473
+    - processing: 0.8473
+
+  ============================================================
+  程序结束。
+
+TF-IDF 分析任务完成!
+zoe@ERAZER:/mnt/c/Users/fxkj/spark-distributed-lab$ docker ps
+CONTAINER ID   IMAGE               COMMAND                   CREATED         STATUS         PORTS                                                                                                                                   NAMES
+4d4f27bb8c50   spark-local:3.5.8   "tini -- bash -c '\n …"   8 minutes ago   Up 8 minutes   0.0.0.0:8082->8081/tcp, [::]:8082->8081/tcp                                                                                             spark-worker-2
+aa7a3413d47e   spark-local:3.5.8   "tini -- bash -c '\n …"   8 minutes ago   Up 8 minutes   0.0.0.0:8081->8081/tcp, [::]:8081->8081/tcp                                                                                             spark-worker-1
+01b1528b23f6   spark-local:3.5.8   "tini -- bash -c '\n …"   8 minutes ago   Up 8 minutes   0.0.0.0:4040->4040/tcp, [::]:4040->4040/tcp, 0.0.0.0:7077->7077/tcp, [::]:7077->7077/tcp, 0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp   spark-master
+zoe@ERAZER:/mnt/c/Users/fxkj/spark-distributed-lab$
