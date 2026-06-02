@@ -40,14 +40,27 @@ ls scripts/
 > - `data/` 存放测试数据：web_graph.txt 是 PageRank 的网页链接图，documents/ 目录下是 6 篇 TF-IDF 测试文档
 > - `scripts/` 是一键启动、停止和运行的脚本
 
-**（可选加分项）** 快速打开 `docker-compose.yml` 说明集群配置：
+**操作**：打开 `docker-compose.yml` 展示集群配置
 
 ```bash
 cat docker/docker-compose.yml
 ```
 
-> docker-compose 定义了 3 个服务：spark-master、spark-worker-1、spark-worker-2。
-> 每个 Worker 分配 1G 内存、2 核 CPU，通过 Docker 虚拟网络互相通信。
+**口述**（对着终端输出讲）：
+> 看一下集群的配置文件 docker-compose.yml。
+>
+> 这里定义了 3 个服务：**spark-master**、**spark-worker-1**、**spark-worker-2**。
+>
+> （指向 spark-master 部分）Master 节点负责调度和资源管理，对外暴露了 3 个端口：
+> - **8080** 是 Master 的 Web UI 管理页面
+> - **7077** 是 Worker 注册和任务提交的通信端口
+> - **4040** 是运行中 Application 的监控页面
+>
+> （指向 spark-worker 部分）两个 Worker 节点配置相同，每个分配了 **1G 内存**和 **2 核 CPU**。它们启动时会自动向 Master 的 7077 端口注册。
+>
+> （指向 volumes 部分）这里的 volumes 把我们本地的 `src/` 和 `data/` 目录挂载到容器内部，这样容器里可以直接访问我们的代码和数据，不需要重新构建镜像。
+>
+> （指向 networks 部分）最后，3 个容器都连接到同一个 Docker 虚拟网络 `spark-network`，通过容器名互相通信。
 
 ---
 
