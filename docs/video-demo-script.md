@@ -9,6 +9,7 @@
 ## 第一部分：开场介绍（约 30 秒）
 
 **操作**：打开终端，`cd` 到项目目录 （在C:\GitRepos\spark-distributed-lab文件夹下选择在终端中打开，然后输入wsl）
+启动docker desktop
 
 **口述**：
 > 大家好，我的演示主题是"基于 Apache Spark 的分布式计算实验"。
@@ -23,10 +24,10 @@
 **操作**：在终端依次执行
 
 ```bash
-# 展示项目目录结构
-tree -L 2 --dirsfirst
+
 # （如果没有 tree 命令，用 ls 代替）
 ls -la
+ls docker/
 ls src/
 ls data/
 ls scripts/
