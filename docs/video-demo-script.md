@@ -106,8 +106,24 @@ http://localhost:8080
 >
 > 分析：中心节点 G、I、D 在图中被较多节点链接，所以 PageRank 值较高，这符合算法预期。
 
-**（可选加分项）** 切换到浏览器 `http://localhost:8080` 或 `http://localhost:4040`：
-> 在 Web UI 上可以看到刚才提交的 Application 信息，包括 Job、Stage 和 Task 的执行记录，证明任务确实分布到 2 个 Worker 并行执行。
+### 4.1 查看 Web UI — Executor 分布（约 1 分钟）
+
+**操作**：切换到浏览器，打开 `http://localhost:8080`，点击 Completed Applications 里的 Application 链接（如 `app-20260602032047-0000`）
+
+**口述**：
+> 回到浏览器，在 Spark Master 页面可以看到刚才完成的 Application。点进去看详情。
+>
+> （指向 Executors 表格）这里显示 Spark 一共创建了 **4 个 Executor**，分布在 2 个 Worker 节点上。
+> 这两个 IP 地址分别对应 Worker-1 和 Worker-2，每个 Worker 上运行了 2 个 Executor。
+>
+> 这是因为我们给每个 Worker 配了 2 核 CPU、每个 Executor 用 1 核，所以每个 Worker 上分配了 2 个 Executor，总共 2 × 2 = 4 个。
+>
+> （指向 State 列）状态显示 KILLED，这不是报错，而是任务已经执行完毕，Executor 被正常回收释放资源了。
+>
+> 这个页面直观地证明了任务确实是**分布到多个节点并行执行**的，而不是在单机上跑的。
+
+**（可选）** 如果时间充裕，点击 Stages 标签页：
+> 在 Stages 标签页可以看到任务被拆分成了多个 Stage，每个 Stage 包含多个 Task，这些 Task 分别在不同的 Executor 上并行执行。这就是 Spark 的 Job → Stage → Task 三级调度机制。
 
 ---
 
@@ -170,7 +186,7 @@ http://localhost:8080
 | 1 | 开场介绍 | 30 秒 |
 | 2 | 项目结构展示 | 1 分钟 |
 | 3 | 启动集群 + Web UI 验证 | 1.5-2 分钟 |
-| 4 | 运行 PageRank + 结果讲解 | 2 分钟 |
+| 4 | 运行 PageRank + 结果讲解 + Web UI Executor 分布 | 3 分钟 |
 | 5 | 运行 TF-IDF + 结果讲解 | 2 分钟 |
 | 6 | 分布式特性分析 | 30 秒 |
 | 7 | 停止集群 + 结尾 | 30 秒 |
